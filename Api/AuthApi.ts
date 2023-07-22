@@ -1,16 +1,16 @@
 import baseApi from ".";
-import Token from "../types/Token";
-import RegisterForm from "../types/RegisterForm";
-import LoginForm from "../types/LoginForm";
 import REST from "../constants/Rest";
+import LoginForm from "../types/LoginForm";
+import RegisterForm from "../types/RegisterForm";
+import Token from "../types/Token";
 
 const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     register: builder.mutation<Token, RegisterForm>({
       query: (body: RegisterForm) => ({
-        url: `${REST.AUTH.ROOT}${REST.AUTH.REGISTER}}`,
+        url: `${REST.AUTH.ROOT}${REST.AUTH.REGISTER}`,
         method: "POST",
-        body,
+        body: JSON.stringify(body),
       }),
       invalidatesTags: ["Auth"],
     }),
@@ -18,7 +18,7 @@ const authApi = baseApi.injectEndpoints({
       query: (refreshToken: string) => ({
         url: `${REST.AUTH.ROOT}${REST.AUTH.REFRESH_TOKEN}`,
         method: "POST",
-        body: { refreshToken },
+        body: refreshToken,
       }),
       invalidatesTags: ["Auth"],
     }),
@@ -26,7 +26,7 @@ const authApi = baseApi.injectEndpoints({
       query: (body: LoginForm) => ({
         url: `${REST.AUTH.ROOT}${REST.AUTH.LOGIN}`,
         method: "POST",
-        body,
+        body: JSON.stringify(body),
       }),
       invalidatesTags: ["Auth"],
     }),
@@ -37,5 +37,4 @@ export const {
   useRegisterMutation,
   useRefreshTokenMutation,
   useLoginMutation,
-  reducer: authReducer,
 } = authApi;

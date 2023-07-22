@@ -1,5 +1,5 @@
 const REST = {
-  BASE_URL: "http://localhost:5555",
+  BASE_URL: "http://192.168.1.99:5555",
   BASE_ENDPOINT: "/api/v1",
   ROOMS: {
     ROOT: "/rooms",
@@ -15,7 +15,7 @@ const REST = {
   },
   MESSAGING: {
     WS: {
-      ROOT: "/chats/ws-chatapp",
+      ROOT: "/chats/ws-chatapp/",
       CHANNEL_GET_MESSAGES: "/channel/rooms",
     },
     ROOT: "/messages",

@@ -12,6 +12,12 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "packagerOpts": { "url": "http://localhost:5555" },
+    "extra" :{
+      "router": {
+        "origin" : "http://localhost:5555"
+      }
+    },
     "assetBundlePatterns": [
       "**/*"
     ],

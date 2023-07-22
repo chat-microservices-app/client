@@ -9,13 +9,14 @@ const sessionApi = baseApi.injectEndpoints({
         url: `${REST.SESSION.ROOT}/${username}`,
         method: "GET",
       }),
+      keepUnusedDataFor: 20,
       providesTags: ["Session"],
     }),
   }),
 });
 
 export const {
+  useLazyGetSessionQuery,
   useGetSessionQuery,
-  reducer: sessionReducer,
   util: sessionUtils,
 } = sessionApi;
