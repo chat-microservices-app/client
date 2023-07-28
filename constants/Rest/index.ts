@@ -3,6 +3,8 @@ const REST = {
   BASE_ENDPOINT: "/api/v1",
   ROOMS: {
     ROOT: "/rooms",
+    JOIN: "/join",
+    PUBLIC: "/public",
   },
   AUTH: {
     ROOT: "/auth",

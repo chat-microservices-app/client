@@ -1,9 +1,18 @@
-import React, { useMemo } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import React, { useMemo, useState } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSelector } from "react-redux";
-import { useGetMessagesQuery } from "../../Api/MessageApi";
-import { selectAccessToken } from "../../store/reducer/AuthSlice";
+import {
+  useDeleteMessageMutation,
+  useGetMessagesQuery,
+} from "../../Api/MessageApi";
+import { useGetSessionQuery } from "../../Api/SessionApi";
+import {
+  selectAccessToken,
+  selectUsername,
+} from "../../store/reducer/AuthSlice";
 import Message from "../../types/Message";
+import MessageForm from "../../types/MessageForm";
+import EditDeleteBox from "../UI/EditDeleteBox";
 
 const styles = StyleSheet.create({
   messageBox: {
@@ -17,10 +26,20 @@ type props = {
   messageId: string;
   roomId: string;
   size: number;
+  editMessage: (messageData: MessageForm) => void;
 };
 
-export default function MessageBox({ messageId, roomId, size }: props) {
+export default function MessageBox({
+  messageId,
+  roomId,
+  size,
+  editMessage,
+}: props) {
   const token = useSelector(selectAccessToken);
+  const username = useSelector(selectUsername);
+  const [isVisible, setIsVisible] = useState<boolean>(false);
+  const [deleteMessage] = useDeleteMessageMutation();
+  const { data: session } = useGetSessionQuery(username);
   const { message } = useGetMessagesQuery(
     { page: 0, roomId, size, token },
     {
@@ -29,6 +48,15 @@ export default function MessageBox({ messageId, roomId, size }: props) {
       }),
     }
   );
+
+  const handleDeleteMessage = () => {
+    deleteMessage({
+      messageId,
+      roomId,
+      userId: session?.userId as string,
+    });
+  };
+
   const isoDate = useMemo(() => {
     const date = new Date(message.messageData.createdAt as string);
     // get the utc date and time
@@ -54,7 +82,7 @@ export default function MessageBox({ messageId, roomId, size }: props) {
       >
         <Image
           source={{
-            uri: message.userData.pictureUrl,
+            uri: message?.userData?.pictureUrl,
             width: 50,
             height: 50,
           }}
@@ -71,21 +99,40 @@ export default function MessageBox({ messageId, roomId, size }: props) {
       >
         <View style={styles.messageBox}>
           <Text style={{ color: "#F0F8FF", fontSize: 15 }}>
-            {message.userData.username}
+            {message?.userData?.username}
           </Text>
           <Text style={{ color: "lightgray", fontSize: 15 }}>{isoDate}</Text>
         </View>
-        <Text
-          style={{
-            color: "white",
-            fontSize: 17,
+        <Pressable
+          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
+          onLongPress={() => {
+            if (message.userData.username === username) setIsVisible(true);
           }}
-          textBreakStrategy="highQuality"
-          allowFontScaling
-          adjustsFontSizeToFit
         >
-          {message.messageData.message}
-        </Text>
+          <Text
+            style={{
+              color: "white",
+              fontSize: 16,
+              padding: 0,
+            }}
+            textBreakStrategy="highQuality"
+            allowFontScaling
+            adjustsFontSizeToFit
+          >
+            {message.messageData.message}
+          </Text>
+        </Pressable>
+        <EditDeleteBox
+          isVisible={isVisible}
+          onClose={() => {
+            setIsVisible(false);
+          }}
+          onEdit={() => {
+            editMessage(message.messageData);
+            setIsVisible(false);
+          }}
+          onDelete={handleDeleteMessage}
+        />
       </View>
     </View>
   );

@@ -17,8 +17,7 @@ export default function useMessageData({ id }: { id: string }) {
     token,
   });
   const [page, setPage] = useState<number>(1);
-  // const prevMessageList = useRef<Message[]>([]);
-  const [triggetGetMoreMessages, { isLoading: isGetMoreMessagesLoading }] =
+  const [triggetGetMoreMessages, { isFetching: isGetMoreMessagesLoading }] =
     useLazyGetMoreMessagesQuery();
 
   async function handleLoadMoreMessages() {

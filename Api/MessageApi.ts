@@ -96,7 +96,11 @@ const messageApi = baseApi.injectEndpoints({
           await cacheDataLoaded;
           const stompClient = new Client({
             webSocketFactory: () => socket,
+            debug: (str) => {
+              console.info(str);
+            },
             onConnect: () => {
+              console.warn("connection established", arg.roomId);
               if (!arg.roomId) return;
               // subscribe to the websocket channel for the room
               stompClient.subscribe(
@@ -115,6 +119,36 @@ const messageApi = baseApi.injectEndpoints({
                       draft.entities[message.messageData.messageId as string] =
                         message;
                       messageAdapter.upsertOne(draft, message);
+                    });
+                  }
+                }
+              );
+
+              stompClient.subscribe(
+                `${REST.MESSAGING.WS.CHANNEL_GET_MESSAGES}/${arg.roomId}${REST.MESSAGING.ROOT}/update`,
+                (event) => {
+                  const message: Message = JSON.parse(event.body);
+                  if (message) {
+                    // updating the cache with the new message
+                    updateCachedData((draft) => {
+                      // eslint-disable-next-line no-param-reassign
+                      draft.entities[message.messageData.messageId as string] =
+                        message;
+                      messageAdapter.upsertOne(draft, message);
+                    });
+                  }
+                }
+              );
+              stompClient.subscribe(
+                `${REST.MESSAGING.WS.CHANNEL_GET_MESSAGES}/${arg.roomId}${REST.MESSAGING.ROOT}/delete`,
+                (event) => {
+                  const messageId: string = JSON.parse(event.body);
+                  if (messageId) {
+                    // updating the cache with the new message
+                    updateCachedData((draft) => {
+                      // eslint-disable-next-line no-param-reassign
+                      draft.ids.filter((id) => id !== messageId);
+                      messageAdapter.removeOne(draft, messageId as string);
                     });
                   }
                 }
@@ -224,6 +258,28 @@ const messageApi = baseApi.injectEndpoints({
       },
       keepUnusedDataFor: 120,
     }),
+    editMessage: builder.mutation<
+      void,
+      { roomId: string; messageId: string; message: MessageForm }
+    >({
+      query: ({ roomId, messageId, message }) => ({
+        url: `${REST.ROOMS.ROOT}/${roomId}/messages/${messageId}`,
+        method: "PUT",
+        body: JSON.stringify(message),
+      }),
+    }),
+    deleteMessage: builder.mutation<
+      void,
+      { roomId: string; messageId: string; userId: string }
+    >({
+      query: ({ roomId, messageId, userId }) => ({
+        url: `${REST.ROOMS.ROOT}/${roomId}/messages/${messageId}`,
+        method: "DELETE",
+        params: {
+          userId,
+        },
+      }),
+    }),
     sendMessage: builder.mutation<
       void,
       { message: MessageForm; roomId: string }
@@ -239,9 +295,11 @@ const messageApi = baseApi.injectEndpoints({
 
 export const {
   util: { invalidateTags },
+  useDeleteMessageMutation,
   useLazyGetMessagesQuery,
   useGetMoreMessagesQuery,
   useGetMessagesQuery,
   useSendMessageMutation,
   useLazyGetMoreMessagesQuery,
+  useEditMessageMutation,
 } = messageApi;

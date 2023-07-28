@@ -21,7 +21,7 @@ const baseQuery = fetchBaseQuery({
 const baseApi = createApi({
   reducerPath: "api",
   baseQuery,
-  tagTypes: ["Auth", "Rooms", "Messages", "Session"],
+  tagTypes: ["Auth", "PublicRooms", "JoinedRooms", "Messages", "Session"],
   endpoints: () => ({}),
 });
 

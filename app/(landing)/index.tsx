@@ -54,9 +54,8 @@ const styles = StyleSheet.create({
 });
 
 const image = {
-  uri: "https://png.pngtree.com/background/20210709/original/pngtree-black-minimalist-atmospheric-wooden-background-picture-image_965794.jpg",
+  uri: "https://img.freepik.com/free-vector/low-poly-abstract-gray-background_1017-33833.jpg?w=2000&t=st=1690518174~exp=1690518774~hmac=91d138cdbb39272c2724f180864f59c307af6f7d1a2fc712dbddb768cfb382a7",
 };
-
 export default function LandingPage() {
   const router = useRouter();
 

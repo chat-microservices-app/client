@@ -9,6 +9,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderRadius: 5,
   },
+  onPressed: {
+    opacity: 0.5,
+  },
   text: {
     color: "white",
     fontWeight: "bold",
@@ -23,7 +26,10 @@ export default function Button({
   onPress: () => void;
 }) {
   return (
-    <Pressable onPress={onPress} style={styles.container}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.container, pressed && styles.onPressed]}
+    >
       <Text style={styles.text}>{title}</Text>
     </Pressable>
   );
