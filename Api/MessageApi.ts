@@ -64,7 +64,10 @@ const messageApi = baseApi.injectEndpoints({
         initialState.size = size;
         initialState.totalPages = totalPages;
         initialState.numberOfElements = numberOfElements;
-        return messageAdapter.upsertMany(initialState, parsedContent);
+        return messageAdapter.upsertMany(
+          { ...initialState, totalPages, page: number, numberOfElements, size },
+          parsedContent
+        );
       },
       providesTags: (result) =>
         result

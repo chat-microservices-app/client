@@ -6,8 +6,8 @@ import { useState } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { useSelector } from "react-redux";
 import {
+  useGetPublicRoomsQuery,
   useGetRoomsJoinedQuery,
-  useLazyGetPublicRoomsQuery,
 } from "../../Api/RoomApi";
 import { useGetSessionQuery } from "../../Api/SessionApi";
 import RoomsToShow from "../../components/ChannelList";
@@ -39,19 +39,54 @@ const styles = StyleSheet.create({
 });
 
 function CustomDrawerContent(props: DrawerContentComponentProps) {
-  const [isRoomJoined, setIsRoomJoined] = useState<boolean>(false);
+  const [hasUserJoinedTheRoom, sethasUserJoinedTheRoom] =
+    useState<boolean>(true);
+  const [roomsJoinedpage, setRoomsJoinedpage] = useState<number>(0);
+  const [publicRoomsPage, setPublicRoomsPage] = useState<number>(0);
   const username = useSelector(selectUsername);
   const { data: session } = useGetSessionQuery(username);
   const { data: roomsJoined, isLoading } = useGetRoomsJoinedQuery({
-    page: 0,
+    page: roomsJoinedpage,
     size: 10,
     userId: session?.userId as string,
   });
 
-  const [
-    getPublicRooms,
-    { isLoading: isPublicRoomsDataLoading, data: publicRooms },
-  ] = useLazyGetPublicRoomsQuery();
+  const { data: publicRooms, isLoading: isPublicRoomsDataLoading } =
+    useGetPublicRoomsQuery({
+      page: publicRoomsPage,
+      size: 10,
+      userId: session?.userId as string,
+    });
+
+  async function getMoreRooms() {
+    if (hasUserJoinedTheRoom) {
+      if (roomsJoinedpage + 1 < (roomsJoined?.totalPages as number)) {
+        setRoomsJoinedpage((prevPage) => prevPage + 1);
+      }
+      return;
+    }
+
+    if (publicRoomsPage + 1 < (publicRooms?.totalPages as number)) {
+      setPublicRoomsPage((prevPage) => prevPage + 1);
+    }
+  }
+
+  async function getPreviousRooms() {
+    if (hasUserJoinedTheRoom) {
+      if (roomsJoinedpage > 0) {
+        setRoomsJoinedpage((prevPage) => prevPage - 1);
+      }
+      return;
+    }
+    if (publicRoomsPage > 0) {
+      setPublicRoomsPage((prevPage) => prevPage - 1);
+    }
+  }
+
+  const page = hasUserJoinedTheRoom ? roomsJoinedpage : publicRoomsPage;
+  const totalPages = hasUserJoinedTheRoom
+    ? (roomsJoined?.totalPages as number)
+    : (publicRooms?.totalPages as number);
 
   return (
     <DrawerContentScrollView
@@ -73,18 +108,13 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
         <Button
           title="My Rooms"
           onPress={() => {
-            setIsRoomJoined(false);
+            sethasUserJoinedTheRoom(true);
           }}
         />
         <Button
           title="Rooms To join"
           onPress={() => {
-            getPublicRooms({
-              page: 0,
-              size: 10,
-              userId: session?.userId as string,
-            });
-            setIsRoomJoined(true);
+            sethasUserJoinedTheRoom(false);
           }}
         />
       </View>
@@ -93,14 +123,46 @@ function CustomDrawerContent(props: DrawerContentComponentProps) {
           <ActivityIndicator size="large" color="#00ff00" />
         ) : (
           <RoomsToShow
-            isRoomJoined={isRoomJoined}
-            setIsRoomJoined={setIsRoomJoined}
-            roomsJoined={roomsJoined?.rooms}
-            publicRooms={publicRooms?.rooms}
+            page={page}
+            size={10}
+            hasUserJoinedTheRoom={hasUserJoinedTheRoom}
+            setHasUserJoinedTheRoom={sethasUserJoinedTheRoom}
+            roomsJoined={roomsJoined}
+            publicRooms={publicRooms}
           />
         )}
       </View>
       <View style={styles.bottomContainer}>
+        <View
+          style={{
+            display: "flex",
+            flexDirection: "row",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            width: "100%",
+            padding: 0,
+            margin: 0,
+          }}
+        >
+          <Button
+            style={{
+              width: "40%",
+              marginEnd: 0,
+              marginStart: 0,
+            }}
+            disableButton={page === 0}
+            onPress={() => getPreviousRooms()}
+            title="previous rooms"
+          />
+          <Button
+            style={{ width: "40%", marginEnd: 0, marginStart: 0 }}
+            disableButton={
+              page + 1 === (totalPages as number) || totalPages === 0
+            }
+            onPress={() => getMoreRooms()}
+            title="next rooms"
+          />
+        </View>
         <CreateChannelButton />
       </View>
     </DrawerContentScrollView>

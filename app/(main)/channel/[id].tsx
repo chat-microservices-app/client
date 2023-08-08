@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from "expo-router";
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   ImageBackground,
@@ -81,10 +81,13 @@ export default function Channel() {
     });
   };
 
-  const handleEditMessage = (messageData: MessageForm) => {
-    isEditMessage.current = messageData.messageId;
-    setMessage(messageData.message);
-  };
+  const handleEditMessage = useCallback(
+    (messageData: MessageForm): void => {
+      isEditMessage.current = messageData?.messageId || undefined;
+      setMessage(messageData?.message || "");
+    },
+    [isEditMessage, setMessage]
+  );
 
   if (isLoading) {
     return (
@@ -154,9 +157,9 @@ export default function Channel() {
           renderItem={({ item }) => (
             <MessageBox
               editMessage={handleEditMessage}
-              messageId={item}
-              size={messageList.size}
+              size={messageList?.size as number}
               roomId={id as string}
+              messageId={item}
             />
           )}
           keyExtractor={(item: string) => item}

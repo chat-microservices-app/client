@@ -3,8 +3,8 @@ import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { useSelector } from "react-redux";
 import { useJoinRoomMutation } from "../../../Api/RoomApi";
 import { useGetSessionQuery } from "../../../Api/SessionApi";
-import { selectUsername } from "../../../store/reducer/AuthSlice";
 import Button from "../../../components/UI/Button";
+import { selectUsername } from "../../../store/reducer/AuthSlice";
 
 const styles = StyleSheet.create({
   root: {
@@ -26,7 +26,7 @@ export default function Join() {
   const username = useSelector(selectUsername);
   const { data: session } = useGetSessionQuery(username);
   const [joinRooms, { isLoading }] = useJoinRoomMutation();
-  const { roomId } = useLocalSearchParams();
+  const { roomId, roomName } = useLocalSearchParams();
   const router = useRouter();
   async function joinChannel(): Promise<void> {
     try {
@@ -34,7 +34,10 @@ export default function Join() {
         roomId: roomId as string,
         userId: session?.userId as string,
       }).unwrap();
-      router.push(`/channel/${roomIdToJoin}`);
+      router.push({
+        pathname: `/channel/${roomIdToJoin}`,
+        params: { roomName },
+      });
     } catch (e) {
       console.warn(e);
     }

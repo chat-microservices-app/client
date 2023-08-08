@@ -1,29 +1,37 @@
 import React from "react";
-import Room from "../../types/Room";
+import { RoomState } from "../../types/Room";
 import ChannelList from "./ChannelList";
 
 export default function RoomsToShow({
-  isRoomJoined,
+  hasUserJoinedTheRoom,
   roomsJoined,
   publicRooms,
-  setIsRoomJoined,
+  setHasUserJoinedTheRoom,
+  page,
+  size,
 }: {
-  isRoomJoined: boolean;
-  setIsRoomJoined: React.Dispatch<React.SetStateAction<boolean>>;
-  roomsJoined: Room[] | undefined;
-  publicRooms: Room[] | undefined;
+  hasUserJoinedTheRoom: boolean;
+  setHasUserJoinedTheRoom: React.Dispatch<React.SetStateAction<boolean>>;
+  roomsJoined: RoomState | undefined;
+  publicRooms: RoomState | undefined;
+  page: number;
+  size: number;
 }) {
-  return isRoomJoined ? (
+  return hasUserJoinedTheRoom ? (
     <ChannelList
-      rooms={publicRooms ?? []}
-      isRoomJoined={isRoomJoined}
-      setIsRoomJoined={setIsRoomJoined}
+      rooms={roomsJoined?.ids ?? []}
+      hasUserJoinedTheRoom={hasUserJoinedTheRoom}
+      setHasUserJoinedTheRoom={setHasUserJoinedTheRoom}
+      page={page}
+      size={size}
     />
   ) : (
     <ChannelList
-      rooms={roomsJoined ?? []}
-      isRoomJoined={isRoomJoined}
-      setIsRoomJoined={setIsRoomJoined}
+      rooms={publicRooms?.ids ?? []}
+      hasUserJoinedTheRoom={hasUserJoinedTheRoom}
+      setHasUserJoinedTheRoom={setHasUserJoinedTheRoom}
+      page={page}
+      size={size}
     />
   );
 }

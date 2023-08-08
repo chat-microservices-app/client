@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { memo, useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSelector } from "react-redux";
 import {
@@ -29,12 +29,7 @@ type props = {
   editMessage: (messageData: MessageForm) => void;
 };
 
-export default function MessageBox({
-  messageId,
-  roomId,
-  size,
-  editMessage,
-}: props) {
+function MessageBox({ messageId, roomId, size, editMessage }: props) {
   const token = useSelector(selectAccessToken);
   const username = useSelector(selectUsername);
   const [isVisible, setIsVisible] = useState<boolean>(false);
@@ -58,11 +53,11 @@ export default function MessageBox({
   };
 
   const isoDate = useMemo(() => {
-    const date = new Date(message.messageData.createdAt as string);
+    const date = new Date(message.messageData?.createdAt as string);
     // get the utc date and time
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   }, [message.messageData?.createdAt]);
-  // use time zone offset to convert to local time
+
   return (
     <View
       style={{
@@ -106,7 +101,7 @@ export default function MessageBox({
         <Pressable
           style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
           onLongPress={() => {
-            if (message.userData.username === username) setIsVisible(true);
+            if (message?.userData.username === username) setIsVisible(true);
           }}
         >
           <Text
@@ -119,7 +114,7 @@ export default function MessageBox({
             allowFontScaling
             adjustsFontSizeToFit
           >
-            {message.messageData.message}
+            {message?.messageData?.message}
           </Text>
         </Pressable>
         <EditDeleteBox
@@ -137,3 +132,5 @@ export default function MessageBox({
     </View>
   );
 }
+
+export default memo(MessageBox);

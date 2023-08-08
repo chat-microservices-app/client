@@ -1,13 +1,25 @@
+import { createEntityAdapter } from "@reduxjs/toolkit";
 import baseApi from ".";
 import REST from "../constants/Rest";
-import Room from "../types/Room";
+import Room, { RoomState } from "../types/Room";
 import RoomForm from "../types/RoomForm";
 import { RoomPagination } from "../types/RoomPagination";
+
+const roomAdapter = createEntityAdapter<Room>({
+  selectId: (room) => room.roomId as string,
+});
+
+const initialState = roomAdapter.getInitialState({
+  page: 0,
+  numberOfElements: 0,
+  size: 0,
+  totalPages: 0,
+});
 
 const roomApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getRoomsJoined: builder.query<
-      { rooms: Room[]; size: number; totalPages: number; page: number },
+      RoomState,
       { page: number; size: number; userId: string }
     >({
       query: ({ page, size, userId }) => ({
@@ -19,28 +31,27 @@ const roomApi = baseApi.injectEndpoints({
         },
       }),
       transformResponse: (apiResponse) => {
-        const { content, totalPages, number, size } =
+        const { content, totalPages, number, size, numberOfElements } =
           apiResponse as RoomPagination;
-        return {
-          rooms: content,
-          totalPages,
-          page: number,
-          size,
-        };
+
+        return roomAdapter.upsertMany(
+          { ...initialState, totalPages, page: number, numberOfElements, size },
+          content
+        );
       },
       providesTags: (result) =>
         result
           ? [
-              ...result.rooms.map(({ roomId }) => ({
+              ...result.ids.map((id) => ({
                 type: "JoinedRooms" as const,
-                id: roomId,
+                id,
               })),
               { type: "JoinedRooms", id: "PARTIAL-LIST" },
             ]
           : [{ type: "JoinedRooms", id: "PARTIAL-LIST" }],
     }),
     getPublicRooms: builder.query<
-      { rooms: Room[]; size: number; totalPages: number; page: number },
+      RoomState,
       { page: number; size: number; userId: string }
     >({
       query: ({ page, size, userId }) => ({
@@ -52,21 +63,24 @@ const roomApi = baseApi.injectEndpoints({
         },
       }),
       transformResponse: (apiResponse) => {
-        const { content, totalPages, number, size } =
+        const { content, totalPages, number, size, numberOfElements } =
           apiResponse as RoomPagination;
-        return {
-          rooms: content,
-          totalPages,
-          page: number,
-          size,
-        };
+        initialState.page = number;
+        initialState.size = size;
+        initialState.totalPages = totalPages;
+        initialState.numberOfElements = numberOfElements;
+
+        return roomAdapter.upsertMany(
+          { ...initialState, totalPages, page: number, numberOfElements, size },
+          content
+        );
       },
       providesTags: (result) =>
         result
           ? [
-              ...result.rooms.map(({ roomId }) => ({
+              ...result.ids.map((id) => ({
                 type: "PublicRooms" as const,
-                id: roomId,
+                id,
               })),
               { type: "PublicRooms", id: "PARTIAL-LIST" },
             ]
@@ -129,7 +143,9 @@ const roomApi = baseApi.injectEndpoints({
 export const {
   useGetRoomsQuery,
   useCreateRoomMutation,
+  useLazyGetRoomsJoinedQuery,
   useLazyGetPublicRoomsQuery,
   useGetRoomsJoinedQuery,
+  useGetPublicRoomsQuery,
   useJoinRoomMutation,
 } = roomApi;
