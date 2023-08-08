@@ -1,4 +1,3 @@
-import { EntityState } from "@reduxjs/toolkit";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import {
@@ -6,7 +5,7 @@ import {
   useLazyGetMoreMessagesQuery,
 } from "../Api/MessageApi";
 import { selectAccessToken } from "../store/reducer/AuthSlice";
-import Message from "../types/Message";
+import { EntityMessage } from "../types/Message";
 
 export default function useMessageData({ id }: { id: string }) {
   const token = useSelector(selectAccessToken);
@@ -22,12 +21,7 @@ export default function useMessageData({ id }: { id: string }) {
 
   async function handleLoadMoreMessages() {
     if (isLoading || isGetMoreMessagesLoading) return;
-    const { totalPages, page: currentPage } = data as EntityState<Message> & {
-      page: number;
-      numberOfElements: number;
-      size: number;
-      totalPages: number;
-    };
+    const { totalPages, page: currentPage } = data as EntityMessage;
     if (totalPages === undefined) return;
     if (totalPages === currentPage + 1) return;
     if (totalPages === page) return;
@@ -49,11 +43,6 @@ export default function useMessageData({ id }: { id: string }) {
     handleLoadMoreMessages,
     isLoading,
     isGetMoreMessagesLoading,
-    messageList: data as EntityState<Message> & {
-      page: number;
-      numberOfElements: number;
-      size: number;
-      totalPages: number;
-    },
+    messageList: data as EntityMessage,
   };
 }

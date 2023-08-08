@@ -19,6 +19,7 @@ import { useGetSessionQuery } from "../../../Api/SessionApi";
 import MessageBox from "../../../components/MessageBox";
 import ChatField from "../../../components/UI/ChatField";
 import useMessageData from "../../../hooks/useMessageData";
+import Drawer from "../../../navigation/Drawer";
 import { selectUsername } from "../../../store/reducer/AuthSlice";
 import MessageForm from "../../../types/MessageForm";
 
@@ -36,7 +37,7 @@ const image = {
 };
 
 export default function Channel() {
-  const { id } = useLocalSearchParams();
+  const { id, roomName } = useLocalSearchParams();
   const { width, height } = useWindowDimensions();
   const isEditMessage = useRef<string | undefined>(undefined);
   const [message, setMessage] = useState<string>("");
@@ -105,13 +106,16 @@ export default function Channel() {
 
   return (
     <ImageBackground source={image} style={[styles.boxContainer]}>
+      <Drawer.Screen
+        options={{ title: `${roomName}`, headerTitle: `${roomName}` }}
+      />
       <View
         style={{
           paddingHorizontal: 20,
           paddingVertical: 5,
           paddingBottom: height * 0.075,
           height:
-            Platform.OS === "ios" && keyboardVisible ? height * 0.4 : "auto",
+            Platform.OS === "ios" && keyboardVisible ? height * 0.4 : "100%",
         }}
       >
         <FlatList
@@ -124,7 +128,7 @@ export default function Channel() {
             if (isLoading || isGetMoreMessagesLoading) return;
             handleLoadMoreMessages();
           }}
-          onEndReachedThreshold={0.02}
+          onEndReachedThreshold={0.03}
           contentContainerStyle={{
             rowGap: 3,
           }}
@@ -168,6 +172,7 @@ export default function Channel() {
         }}
       >
         <ChatField
+          canUseChat={messageList?.canUseChat as boolean}
           isEditMessage={isEditMessage}
           setMessage={setMessage}
           message={message}

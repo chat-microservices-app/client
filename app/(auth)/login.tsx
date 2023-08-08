@@ -117,6 +117,7 @@ export default function Login() {
         value={username}
         onChangeText={setUsername}
         style={styles.input}
+        autoCapitalize="none"
         placeholderTextColor="grey"
         placeholder="Email or Username"
       />

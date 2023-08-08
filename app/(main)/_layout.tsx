@@ -10,12 +10,11 @@ import {
   useLazyGetPublicRoomsQuery,
 } from "../../Api/RoomApi";
 import { useGetSessionQuery } from "../../Api/SessionApi";
-import ChannelList from "../../components/ChannelList";
+import RoomsToShow from "../../components/ChannelList";
 import CreateChannelButton from "../../components/CreateChannelButton";
 import Button from "../../components/UI/Button";
 import Drawer from "../../navigation/Drawer";
 import { selectUsername } from "../../store/reducer/AuthSlice";
-import Room from "../../types/Room";
 
 const styles = StyleSheet.create({
   topContainer: {
@@ -38,32 +37,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
   },
 });
-
-function RoomsToShow({
-  isRoomJoined,
-  roomsJoined,
-  publicRooms,
-  setIsRoomJoined,
-}: {
-  isRoomJoined: boolean;
-  setIsRoomJoined: React.Dispatch<React.SetStateAction<boolean>>;
-  roomsJoined: Room[] | undefined;
-  publicRooms: Room[] | undefined;
-}) {
-  return isRoomJoined ? (
-    <ChannelList
-      rooms={publicRooms ?? []}
-      isRoomJoined={isRoomJoined}
-      setIsRoomJoined={setIsRoomJoined}
-    />
-  ) : (
-    <ChannelList
-      rooms={roomsJoined ?? []}
-      isRoomJoined={isRoomJoined}
-      setIsRoomJoined={setIsRoomJoined}
-    />
-  );
-}
 
 function CustomDrawerContent(props: DrawerContentComponentProps) {
   const [isRoomJoined, setIsRoomJoined] = useState<boolean>(false);

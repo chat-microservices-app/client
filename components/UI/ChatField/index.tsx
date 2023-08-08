@@ -47,6 +47,7 @@ type props = {
   setMessage: React.Dispatch<React.SetStateAction<string>>;
   message: string;
   isEditMessage: React.MutableRefObject<string | undefined>;
+  canUseChat: boolean;
 };
 
 export default function ChatField({
@@ -57,17 +58,18 @@ export default function ChatField({
   setMessage,
   message,
   isEditMessage,
+  canUseChat,
 }: props) {
   useLayoutEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
-      "keyboardWillShow",
+      "keyboardDidShow",
       () => {
         setKeyboardVisible(true);
       }
     );
 
     const keyboardDidHideListener = Keyboard.addListener(
-      "keyboardWillHide",
+      "keyboardDidHide",
       () => {
         setKeyboardVisible(false);
       }
@@ -79,7 +81,6 @@ export default function ChatField({
       keyboardDidHideListener.remove();
     };
   });
-
   return (
     <View
       style={[
@@ -97,6 +98,7 @@ export default function ChatField({
           style={styles.inputField}
           placeholder="Enter a message..."
           multiline
+          editable={canUseChat}
         />
         {isEditMessage.current && (
           <TouchableOpacity
@@ -116,7 +118,7 @@ export default function ChatField({
           onPress();
           setMessage("");
         }}
-        disabled={isMessageSentLoading}
+        disabled={isMessageSentLoading || !canUseChat}
       >
         <Feather
           name={isEditMessage.current ? "edit" : "send"}

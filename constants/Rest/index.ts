@@ -18,7 +18,7 @@ const REST = {
   MESSAGING: {
     WS: {
       ROOT: "/chats/ws-chatapp/",
-      CHANNEL_GET_MESSAGES: "/channel/rooms",
+      CHANNEL_GET_MESSAGES: "/topic/rooms",
     },
     ROOT: "/messages",
   },

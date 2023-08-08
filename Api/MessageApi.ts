@@ -1,14 +1,14 @@
 /* eslint-disable no-param-reassign */
-import { EntityState, createEntityAdapter } from "@reduxjs/toolkit";
-import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
+import { createEntityAdapter } from "@reduxjs/toolkit";
+
 import baseApi from ".";
 import REST from "../constants/Rest";
-import Message from "../types/Message";
+import Message, { EntityMessage } from "../types/Message";
 import MessageForm from "../types/MessageForm";
 import MessagePagination, {
   SanitizedMessage,
 } from "../types/MessagePagination";
+import webSocketConnection from "../websocket/websocket";
 
 const messageAdapter = createEntityAdapter<Message>({
   selectId: (message) => message.messageData.messageId as string,
@@ -19,17 +19,13 @@ const initialState = messageAdapter.getInitialState({
   numberOfElements: 0,
   size: 0,
   totalPages: 0,
+  canUseChat: false,
 });
 
 const messageApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getMessages: builder.query<
-      EntityState<Message> & {
-        page: number;
-        numberOfElements: number;
-        size: number;
-        totalPages: number;
-      },
+      EntityMessage,
       { roomId: string; token: string; page: number; size: number }
     >({
       query: ({ roomId, token, page, size }) => ({
@@ -87,92 +83,41 @@ const messageApi = baseApi.injectEndpoints({
         { cacheDataLoaded, updateCachedData, cacheEntryRemoved }
       ) => {
         // set up a subscription to the websocket
-        const socket = new SockJS(
+        let websocket = webSocketConnection(
           `${REST.BASE_URL}${REST.BASE_ENDPOINT}${REST.MESSAGING.WS.ROOT}`,
-          null
+          arg.roomId,
+          arg.token,
+          updateCachedData,
+          messageAdapter
         );
+
         try {
           // wait for the initial query to complete
           await cacheDataLoaded;
-          const stompClient = new Client({
-            webSocketFactory: () => socket,
-            debug: (str) => {
-              console.info(str);
-            },
-            onConnect: () => {
-              console.warn("connection established", arg.roomId);
-              if (!arg.roomId) return;
-              // subscribe to the websocket channel for the room
-              stompClient.subscribe(
-                `${REST.MESSAGING.WS.CHANNEL_GET_MESSAGES}/${arg.roomId}${REST.MESSAGING.ROOT}`,
-                (event) => {
-                  const message: Message = JSON.parse(event.body);
-                  if (message) {
-                    // updating the cache with the new message
-                    updateCachedData((draft) => {
-                      // eslint-disable-next-line no-param-reassign
-                      draft.ids = [
-                        message.messageData.messageId as string,
-                        ...draft.ids,
-                      ];
-                      // eslint-disable-next-line no-param-reassign
-                      draft.entities[message.messageData.messageId as string] =
-                        message;
-                      messageAdapter.upsertOne(draft, message);
-                    });
-                  }
-                }
-              );
 
-              stompClient.subscribe(
-                `${REST.MESSAGING.WS.CHANNEL_GET_MESSAGES}/${arg.roomId}${REST.MESSAGING.ROOT}/update`,
-                (event) => {
-                  const message: Message = JSON.parse(event.body);
-                  if (message) {
-                    // updating the cache with the new message
-                    updateCachedData((draft) => {
-                      // eslint-disable-next-line no-param-reassign
-                      draft.entities[message.messageData.messageId as string] =
-                        message;
-                      messageAdapter.upsertOne(draft, message);
-                    });
-                  }
-                }
+          // active the inital websocket connection
+          websocket.stompClient.activate();
+
+          // if the websocket forcefullycloses, we want to reconnect
+          websocket.stompClient.onWebSocketClose = async () => {
+            setTimeout(() => {
+              websocket = webSocketConnection(
+                `${REST.BASE_URL}${REST.BASE_ENDPOINT}${REST.MESSAGING.WS.ROOT}`,
+                arg.roomId,
+                arg.token,
+                updateCachedData,
+                messageAdapter
               );
-              stompClient.subscribe(
-                `${REST.MESSAGING.WS.CHANNEL_GET_MESSAGES}/${arg.roomId}${REST.MESSAGING.ROOT}/delete`,
-                (event) => {
-                  const messageId: string = JSON.parse(event.body);
-                  if (messageId) {
-                    // updating the cache with the new message
-                    updateCachedData((draft) => {
-                      // eslint-disable-next-line no-param-reassign
-                      draft.ids.filter((id) => id !== messageId);
-                      messageAdapter.removeOne(draft, messageId as string);
-                    });
-                  }
-                }
-              );
-            },
-            connectHeaders: {
-              Authorization: `Bearer ${arg.token}`,
-            },
-            onWebSocketClose: () => {
-              stompClient.deactivate();
-            },
-            reconnectDelay: 1500,
-            heartbeatIncoming: 3000,
-            heartbeatOutgoing: 1000,
-          });
-          // create the stomp client to translate the socket messages
-          stompClient.activate();
+              websocket.stompClient.activate();
+            }, 5000);
+          };
         } catch (e) {
           console.warn(e, " errror here");
-          socket.close();
+          websocket.socket.close();
         }
 
         cacheEntryRemoved.then(() => {
-          if (socket) socket.close();
+          if (websocket.socket) websocket.socket.close();
         });
       },
       keepUnusedDataFor: 120,
@@ -222,10 +167,11 @@ const messageApi = baseApi.injectEndpoints({
       },
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
         try {
-          // add the values to the get more messages query
+          // add the values to the get more messages query after the query has been fulfilled
           const messages = await queryFulfilled;
           const { data } = messages;
           if (data?.messages?.length > 0) {
+            // mutate the cache to add the new message to to the getMessages query
             dispatch(
               baseApi.util.updateQueryData(
                 "getMessages" as never,
@@ -235,14 +181,7 @@ const messageApi = baseApi.injectEndpoints({
                   page: 0,
                   size: arg.size,
                 } as never,
-                (
-                  draft: EntityState<Message> & {
-                    page: number;
-                    numberOfElements: number;
-                    size: number;
-                    totalPages: number;
-                  }
-                ) => {
+                (draft: EntityMessage) => {
                   draft.page = data.page;
                   draft.size = data.size;
                   draft.totalPages = data.totalPages;
@@ -291,6 +230,7 @@ const messageApi = baseApi.injectEndpoints({
       }),
     }),
   }),
+  overrideExisting: true,
 });
 
 export const {

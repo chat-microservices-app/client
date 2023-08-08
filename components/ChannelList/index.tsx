@@ -1,45 +1,29 @@
-import { useState } from "react";
-import { StyleSheet, View } from "react-native";
-
+import React from "react";
 import Room from "../../types/Room";
-import ChannelToRender from "./ChannelToRender";
+import ChannelList from "./ChannelList";
 
-const styles = StyleSheet.create({
-  container: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    justifyContent: "space-between",
-    paddingVertical: 10,
-    gap: 10,
-  },
-});
-
-export default function ChannelList({
-  rooms,
+export default function RoomsToShow({
   isRoomJoined,
+  roomsJoined,
+  publicRooms,
   setIsRoomJoined,
 }: {
-  rooms: Room[];
   isRoomJoined: boolean;
   setIsRoomJoined: React.Dispatch<React.SetStateAction<boolean>>;
+  roomsJoined: Room[] | undefined;
+  publicRooms: Room[] | undefined;
 }) {
-  const [roomJoined, setRoomJoined] = useState<string | undefined>(undefined);
-  const updateRoomJoined = (roomId: string) => {
-    setRoomJoined(roomId);
-  };
-  return (
-    <View style={styles.container}>
-      {rooms.map((room) => (
-        <ChannelToRender
-          roomJoined={roomJoined}
-          updateRoomJoined={updateRoomJoined}
-          item={room}
-          key={room.roomId}
-          setIsRoomJoined={setIsRoomJoined}
-          isRoomJoined={isRoomJoined}
-        />
-      ))}
-    </View>
+  return isRoomJoined ? (
+    <ChannelList
+      rooms={publicRooms ?? []}
+      isRoomJoined={isRoomJoined}
+      setIsRoomJoined={setIsRoomJoined}
+    />
+  ) : (
+    <ChannelList
+      rooms={roomsJoined ?? []}
+      isRoomJoined={isRoomJoined}
+      setIsRoomJoined={setIsRoomJoined}
+    />
   );
 }

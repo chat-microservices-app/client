@@ -47,7 +47,10 @@ export default function ChannelToRender({
   const router = useRouter();
   async function handleJoinRoom() {
     updateRoomJoined(item.roomId);
-    router.push(`/channel/${item.roomId}`);
+    router.push({
+      pathname: `/channel/${item.roomId}`,
+      params: { roomName: item.name },
+    });
   }
 
   async function handleRequestJoinPublicRoom() {
