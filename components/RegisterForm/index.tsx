@@ -1,4 +1,15 @@
-import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { AntDesign } from "@expo/vector-icons";
+import { ImagePickerAsset } from "expo-image-picker";
+import {
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
+import { TouchableOpacity } from "react-native-gesture-handler";
+import useMediaSelection from "../../hooks/useMediaSelection";
 import {
   ActionFormReducer,
   StateFormReducer,
@@ -61,8 +72,65 @@ export default function RegisterForm({
     pictureUrl,
     rePassword,
   } = form;
+
+  const { openImagePicker, image } = useMediaSelection();
+
+  async function imagePicker() {
+    await openImagePicker();
+    dispatch({
+      ...form,
+      type: reducerTypes.SET_PICTURE,
+      pictureUrl: image.current as ImagePickerAsset,
+    });
+  }
+
   return (
     <View style={{ display: "flex", rowGap: 12 }}>
+      <View
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <TouchableOpacity
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: 100,
+            height: 105,
+            width: 105,
+            borderColor: "#5964E8",
+            borderWidth: 2,
+            backgroundColor: "gray",
+            marginVertical: 10,
+          }}
+          onPress={() => imagePicker()}
+        >
+          <Image
+            style={{
+              borderRadius: 50,
+            }}
+            source={{
+              uri: `${
+                !pictureUrl?.uri
+                  ? "https://avachara.com/avatar/img/m_face/1.png"
+                  : pictureUrl.uri
+              }`,
+              height: 100,
+              width: 100,
+            }}
+          />
+          <AntDesign
+            name="pluscircleo"
+            size={25}
+            color="white"
+            style={{ position: "absolute", bottom: 0, right: 0 }}
+          />
+        </TouchableOpacity>
+      </View>
       <TextInput
         value={username}
         onChangeText={(text: string) => {
@@ -174,21 +242,6 @@ export default function RegisterForm({
           placeholder="Repeat Your Password"
         />
       </View>
-      <TextInput
-        value={pictureUrl}
-        autoCapitalize="none"
-        onChangeText={(text) => {
-          dispatch({
-            ...form,
-            type: reducerTypes.SET_PICTURE,
-            pictureUrl: text,
-          });
-        }}
-        keyboardType="url"
-        style={styles.input}
-        placeholderTextColor="grey"
-        placeholder="Picture as URL"
-      />
       <TextInput
         value={dateOfBirth as string}
         autoCapitalize="none"

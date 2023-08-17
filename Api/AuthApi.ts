@@ -10,6 +10,9 @@ const authApi = baseApi.injectEndpoints({
       query: (body: RegisterForm) => ({
         url: `${REST.AUTH.ROOT}${REST.AUTH.REGISTER}`,
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       }),
       invalidatesTags: ["Auth"],
@@ -18,6 +21,9 @@ const authApi = baseApi.injectEndpoints({
       query: (refreshToken: string) => ({
         url: `${REST.AUTH.ROOT}${REST.AUTH.REFRESH_TOKEN}`,
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: refreshToken,
       }),
       invalidatesTags: ["Auth"],
@@ -26,6 +32,9 @@ const authApi = baseApi.injectEndpoints({
       query: (body: LoginForm) => ({
         url: `${REST.AUTH.ROOT}${REST.AUTH.LOGIN}`,
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       }),
       invalidatesTags: ["Auth"],

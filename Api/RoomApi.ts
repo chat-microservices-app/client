@@ -113,6 +113,9 @@ const roomApi = baseApi.injectEndpoints({
       query: (body: RoomForm) => ({
         url: REST.ROOMS.ROOT,
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(body),
       }),
       transformResponse: (apiResponse, meta) =>

@@ -1,12 +1,16 @@
+import { ImagePickerAsset } from "expo-image-picker";
 import { useReducer } from "react";
 import { useDispatch } from "react-redux";
 import { useRegisterMutation } from "../Api/AuthApi";
+import { useUploadProfilePictureMutation } from "../Api/MediaApi";
 import { setCredentials } from "../store/reducer/AuthSlice";
 import RegisterForm from "../types/RegisterForm";
+import convertImageToCustomFile from "../utils/imageUtils";
 import useSession from "./useSession";
 
-export interface StateFormReducer extends RegisterForm {
+export interface StateFormReducer extends Omit<RegisterForm, "pictureUrl"> {
   rePassword: string;
+  pictureUrl: ImagePickerAsset;
 }
 const initialState: StateFormReducer = {
   username: "",
@@ -14,9 +18,9 @@ const initialState: StateFormReducer = {
   firstName: "",
   lastName: "",
   dateOfBirth: "",
-  pictureUrl: "",
   password: "",
   rePassword: "",
+  pictureUrl: {} as ImagePickerAsset,
 };
 
 export interface ActionFormReducer extends StateFormReducer {
@@ -76,21 +80,37 @@ const reducerForm = (state: StateFormReducer, action: ActionFormReducer) => {
 export default function useRegister() {
   const [form, dispatch] = useReducer(reducerForm, initialState);
   const toDispatch = useDispatch();
+  const [uploadImage, { isLoading: isImageLoading }] =
+    useUploadProfilePictureMutation();
   const [register, { isError, isLoading, isSuccess }] = useRegisterMutation();
+
   const {
     isError: isSessionError,
     isLoading: isSessionLoading,
     isSuccess: isSessionSuccess,
   } = useSession();
+
   async function submitForm() {
     const dateOfBirth = form.dateOfBirth as string;
     const newDate = new Date(dateOfBirth);
     const toSubmit: RegisterForm = {
       ...form,
+      pictureUrl: "",
       dateOfBirth: newDate.toISOString(),
     };
+
     try {
+      const stream = await convertImageToCustomFile(form.pictureUrl);
       const data = await register(toSubmit).unwrap();
+      const media = new FormData();
+      // ignore the type mismatch
+      media.append("file", stream as never);
+
+      await uploadImage({
+        media,
+        userId: data?.username,
+        token: data?.accessToken,
+      }).unwrap();
       toDispatch(
         setCredentials({
           accessToken: data?.accessToken,
@@ -109,6 +129,7 @@ export default function useRegister() {
 
   return {
     isSessionError,
+    isImageLoading,
     isSessionLoading,
     isSessionSuccess,
     isError,

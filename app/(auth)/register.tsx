@@ -32,7 +32,8 @@ const styles = StyleSheet.create({
 });
 
 export default function RegisterScreen() {
-  const { isLoading, isError, form, dispatch, submitForm } = useRegister();
+  const { isLoading, isError, form, dispatch, submitForm, isImageLoading } =
+    useRegister();
 
   if (isError) {
     return (
@@ -42,10 +43,13 @@ export default function RegisterScreen() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || isImageLoading) {
     return (
       <View style={styles.container}>
         <ActivityIndicator size="large" color="#00ff00" />
+        <View>
+          <Text style={styles.text}>Waiting for assets to load...</Text>
+        </View>
       </View>
     );
   }

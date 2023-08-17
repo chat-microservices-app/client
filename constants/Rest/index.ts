@@ -22,6 +22,9 @@ const REST = {
     },
     ROOT: "/messages",
   },
+  MEDIA: {
+    ROOT: "/media",
+  },
 } as const;
 
 export default REST;

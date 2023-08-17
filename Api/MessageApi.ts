@@ -207,6 +207,9 @@ const messageApi = baseApi.injectEndpoints({
       query: ({ roomId, messageId, message }) => ({
         url: `${REST.ROOMS.ROOT}/${roomId}/messages/${messageId}`,
         method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(message),
       }),
     }),
@@ -217,6 +220,9 @@ const messageApi = baseApi.injectEndpoints({
       query: ({ roomId, messageId, userId }) => ({
         url: `${REST.ROOMS.ROOT}/${roomId}/messages/${messageId}`,
         method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
         params: {
           userId,
         },
@@ -228,6 +234,9 @@ const messageApi = baseApi.injectEndpoints({
     >({
       query: ({ roomId, message }) => ({
         url: `${REST.ROOMS.ROOT}/${roomId}/messages`,
+        headers: {
+          "Content-Type": "application/json",
+        },
         method: "POST",
         body: JSON.stringify(message),
       }),
