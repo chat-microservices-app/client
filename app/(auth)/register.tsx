@@ -32,8 +32,7 @@ const styles = StyleSheet.create({
 });
 
 export default function RegisterScreen() {
-  const { isLoading, isError, form, dispatch, submitForm, isImageLoading } =
-    useRegister();
+  const { isLoading, isError, submitForm, isImageLoading } = useRegister();
 
   if (isError) {
     return (
@@ -68,7 +67,7 @@ export default function RegisterScreen() {
       <Text style={styles.title}>Register</Text>
       <Text style={styles.subtitle}>Thank you for choosing us </Text>
       <Text style={styles.text}>ACCOUNT INFORMATION</Text>
-      <RegisterForm dispatch={dispatch} form={form} submitForm={submitForm} />
+      <RegisterForm submitForm={submitForm} />
     </ScrollView>
   );
 }
