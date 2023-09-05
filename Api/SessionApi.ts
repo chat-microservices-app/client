@@ -9,7 +9,7 @@ const sessionApi = baseApi.injectEndpoints({
         url: `${REST.SESSION.ROOT}/${username}`,
         method: "GET",
       }),
-      keepUnusedDataFor: 20,
+      keepUnusedDataFor: 60,
       providesTags: ["Session"],
     }),
   }),

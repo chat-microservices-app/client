@@ -1,5 +1,5 @@
 const REST = {
-  BASE_URL: "http://192.168.1.99:5555",
+  BASE_URL: "https://chatapp.internal.com",
   BASE_ENDPOINT: "/api/v1",
   ROOMS: {
     ROOT: "/rooms",

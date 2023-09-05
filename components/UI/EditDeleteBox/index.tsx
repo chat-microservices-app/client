@@ -16,12 +16,15 @@ const styles = StyleSheet.create({
     columnGap: 10,
   },
   container: {
-    right: 10,
-    top: 10,
+    right: 0,
+    bottom: 0,
+    minWidth: "100%",
     backgroundColor: "white",
     padding: 10,
+    margin: 0,
     borderRadius: 5,
     flexDirection: "row",
+    position: "absolute",
   },
   option: {
     padding: 5,

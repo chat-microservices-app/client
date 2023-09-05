@@ -8,7 +8,7 @@ import MessageForm from "../types/MessageForm";
 import MessagePagination, {
   SanitizedMessage,
 } from "../types/MessagePagination";
-import webSocketConnection from "../websocket/websocket";
+import WebSocketConnection from "../websocket/websocket";
 
 const messageAdapter = createEntityAdapter<Message>({
   selectId: (message) => message.messageData.messageId as string,
@@ -86,7 +86,7 @@ const messageApi = baseApi.injectEndpoints({
         { cacheDataLoaded, updateCachedData, cacheEntryRemoved }
       ) => {
         // set up a subscription to the websocket
-        let websocket = webSocketConnection(
+        const websocket = new WebSocketConnection(
           `${REST.BASE_URL}${REST.BASE_ENDPOINT}${REST.MESSAGING.WS.ROOT}`,
           arg.roomId,
           arg.token,
@@ -97,33 +97,21 @@ const messageApi = baseApi.injectEndpoints({
         try {
           // wait for the initial query to complete
           await cacheDataLoaded;
-
-          // active the inital websocket connection
-          websocket.stompClient.activate();
-
-          // if the websocket forcefullycloses, we want to reconnect
-          websocket.stompClient.onWebSocketClose = async () => {
-            setTimeout(() => {
-              websocket = webSocketConnection(
-                `${REST.BASE_URL}${REST.BASE_ENDPOINT}${REST.MESSAGING.WS.ROOT}`,
-                arg.roomId,
-                arg.token,
-                updateCachedData,
-                messageAdapter
-              );
-              websocket.stompClient.activate();
-            }, 5000);
-          };
+          websocket.getStompClient()?.activate();
         } catch (e) {
-          console.warn(e, " errror here");
-          websocket.socket.close();
+          console.error(e, " error here");
+          websocket.getSocket()?.close();
         }
 
-        cacheEntryRemoved.then(() => {
-          if (websocket.socket) websocket.socket.close();
+        cacheEntryRemoved.then(async () => {
+          if (websocket.getStompClient) {
+            console.warn("closing socket due to cache entry being removed");
+            await websocket.getStompClient()?.deactivate();
+            websocket.getStompClient()?.forceDisconnect();
+          }
         });
       },
-      keepUnusedDataFor: 120,
+      keepUnusedDataFor: 60,
     }),
 
     getMoreMessages: builder.query<

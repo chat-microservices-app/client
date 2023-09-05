@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSelector } from "react-redux";
 import {
   useDeleteMessageMutation,
@@ -19,6 +19,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "flex-start",
     columnGap: 10,
+    borderRadius: 10,
   },
 });
 
@@ -58,11 +59,13 @@ function MessageBox({ messageId, roomId, size, editMessage }: props) {
     return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
   }, [message.messageData?.createdAt]);
 
+  const isSessionUser = session?.username === message?.userData?.username;
+
   return (
     <View
       style={{
         display: "flex",
-        flexDirection: "row",
+        flexDirection: isSessionUser ? "row-reverse" : "row",
         columnGap: 20,
         rowGap: 0,
         alignContent: "flex-start",
@@ -78,18 +81,29 @@ function MessageBox({ messageId, roomId, size, editMessage }: props) {
         <Image
           source={{
             uri: message?.userData?.pictureUrl,
-            width: 50,
-            height: 50,
+            width: 35,
+            height: 35,
           }}
           style={{
             borderRadius: 50,
           }}
         />
       </View>
-      <View
+      <TouchableOpacity
+        onLongPress={() => {
+          if (isSessionUser) setIsVisible(true);
+        }}
         style={{
           flex: 1,
           rowGap: 10,
+          overflow: "hidden",
+          padding: 10,
+          borderWidth: 1,
+          borderTopStartRadius: isSessionUser ? 10 : 0,
+          borderTopEndRadius: isSessionUser ? 0 : 10,
+          borderBottomEndRadius: 10,
+          borderBottomStartRadius: 10,
+          backgroundColor: isSessionUser ? "#7289DA" : "#36393E",
         }}
       >
         <View style={styles.messageBox}>
@@ -98,37 +112,30 @@ function MessageBox({ messageId, roomId, size, editMessage }: props) {
           </Text>
           <Text style={{ color: "lightgray", fontSize: 15 }}>{isoDate}</Text>
         </View>
-        <Pressable
-          style={({ pressed }) => [{ opacity: pressed ? 0.5 : 1 }]}
-          onLongPress={() => {
-            if (message?.userData.username === username) setIsVisible(true);
+
+        <Text
+          style={{
+            color: "white",
+            fontSize: 16,
           }}
+          textBreakStrategy="highQuality"
+          allowFontScaling
+          adjustsFontSizeToFit
         >
-          <Text
-            style={{
-              color: "white",
-              fontSize: 16,
-              padding: 0,
-            }}
-            textBreakStrategy="highQuality"
-            allowFontScaling
-            adjustsFontSizeToFit
-          >
-            {message?.messageData?.message}
-          </Text>
-        </Pressable>
-        <EditDeleteBox
-          isVisible={isVisible}
-          onClose={() => {
-            setIsVisible(false);
-          }}
-          onEdit={() => {
-            editMessage(message.messageData);
-            setIsVisible(false);
-          }}
-          onDelete={handleDeleteMessage}
-        />
-      </View>
+          {message?.messageData?.message}
+        </Text>
+      </TouchableOpacity>
+      <EditDeleteBox
+        isVisible={isVisible}
+        onClose={() => {
+          setIsVisible(false);
+        }}
+        onEdit={() => {
+          editMessage(message.messageData);
+          setIsVisible(false);
+        }}
+        onDelete={handleDeleteMessage}
+      />
     </View>
   );
 }

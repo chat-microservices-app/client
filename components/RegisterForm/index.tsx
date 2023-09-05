@@ -97,7 +97,7 @@ export default function RegisterForm({
   const methods = useForm<SignUpFormValues>({
     resolver: zodResolver(singUpFormSchema),
     defaultValues: {
-      dateOfBirth: new Date(),
+      dateOfBirth: new Date(2000, 3, 3),
       password: {
         password: "",
         confirmPassword: "",
